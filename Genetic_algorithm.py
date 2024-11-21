@@ -16,7 +16,7 @@ class GAApplication:
                  ).grid(row=0, column=0, columnspan=3, sticky="w", padx=10, pady=20)
 
         # Параметры алгоритма
-        self.mutation_probability = tk.DoubleVar(value=15.0)
+        self.mutation_probability = tk.DoubleVar(value=10.0)
         self.num_individuals = tk.IntVar(value=20)
         self.gene_lower_limit = tk.DoubleVar(value=-1.0)
         self.gene_upper_limit = tk.DoubleVar(value=1.0)
@@ -58,7 +58,7 @@ class GAApplication:
         self.history_table = ttk.Treeview(main_window, columns=("Gen", "ID", "x1", "x2", "Fitness"), show='headings')
         self.history_table.grid(row=0, column=3, rowspan=16, padx=5, sticky="nswe")
         for col, width, text in zip(["Gen", "ID", "x1", "x2", "Fitness"], [50, 50, 100, 100, 100],
-                                    ["Поколение", "№", "x1", "x2", "Приспособленность"]):
+                                    ["Поколение", "№ особи", "x1", "x2", "Приспособленность"]):
             self.history_table.column(col, width=width, anchor="center")
             self.history_table.heading(col, text=text)
 
@@ -83,7 +83,7 @@ class GAApplication:
 
     @staticmethod
     def fitness_function(x1, x2): 
-        return 100*(x2 - x1**2)**2 + (1 - x1)**2
+        return (100*(x2 - x1**2)**2 + (1 - x1)**2)
 
     def generate_population(self, size, min_val, max_val):
         if self.integer_encoding.get():
@@ -115,7 +115,7 @@ class GAApplication:
 
     def crossover(self, p1, p2, crossover_prob=0.9):
         if random.random() < crossover_prob:
-            alpha = np.random.uniform(0, 1, p1.shape)
+            alpha = np.random.uniform(0, 1, p1.shape) 
             offspring = p1 * alpha + p2 * (1 - alpha)
             if self.integer_encoding.get():
                 return np.round(offspring).astype(int)
