@@ -8,7 +8,7 @@ class GAApplication:
     def __init__(self, main_window):
 
         self.main_window = main_window
-        self.main_window.title("Генетический алгоритм")
+        self.main_window.title("Генетический алгоритм для поиска минимума заданной функции")
         main_window.grid_columnconfigure(3, weight=1)
         main_window.grid_rowconfigure(12, weight=1)
         root.geometry("1000x450")
@@ -23,6 +23,7 @@ class GAApplication:
         self.generations_limit = tk.IntVar(value=20)
         self.integer_encoding = tk.BooleanVar(value=False)
         self.modified_selection = tk.BooleanVar(value=False)
+        self.save_history = tk.BooleanVar(value=False)
 
         # UI для управления
         self._add_parameter_input("Мутация (%)", self.mutation_probability, 1)
@@ -33,10 +34,12 @@ class GAApplication:
 
         self._add_checkbox("Целочисленная кодировка", self.integer_encoding, 6)
         self._add_checkbox("Использовать модифицированный отбор", self.modified_selection, 7)
+        self._add_checkbox("Сохранять историю таблицы (может замедлить программу)", self.save_history, 8)  # Флажок на форме
 
-        tk.Button(main_window, text="Запуск алгоритма", command=self.genetic_algorithm
+
+        tk.Button(main_window, text="Запустить алгоритм", command=self.genetic_algorithm
                   ).grid(row=9, column=0, columnspan=2, sticky="we", padx=10)
-        tk.Button(main_window, text="Сброс", command=self.reset_data
+        tk.Button(main_window, text="Очистить", command=self.reset_data
                   ).grid(row=10, column=0, columnspan=2, sticky="we", padx=10)
 
         # Поля для отображения результатов
@@ -110,7 +113,6 @@ class GAApplication:
 
         return np.array(chosen)
 
-
     def crossover(self, p1, p2, crossover_prob=0.9):
         if random.random() < crossover_prob:
             alpha = np.random.uniform(0, 1, p1.shape)
@@ -137,6 +139,9 @@ class GAApplication:
         max_gene = self.gene_upper_limit.get()
         generation_count = self.generations_limit.get()
 
+        if not self.save_history.get():
+            self.history_table.delete(*self.history_table.get_children())
+
         if self.current_population is None or self.integer_encoding.get() != self.previous_integer_encoding:
             self.current_population = self.generate_population(num_individuals, min_gene, max_gene)
             self.previous_integer_encoding = self.integer_encoding.get()  
@@ -159,8 +164,11 @@ class GAApplication:
 
             self.current_population = np.array(next_gen)
             self.total_generations += 1
-            self._update_results(gen)
+            if self.save_history.get():
+                self._update_results(gen)
 
+        if not self.save_history.get():
+            self._update_results(gen)
 
     def reset_data(self):
         self.current_population = None
@@ -172,7 +180,7 @@ class GAApplication:
 
     def _update_results(self, gen):
         self.completed_generations.config(text=str(self.total_generations))
-        
+
         if self.best_chromosome is not None:
             if self.integer_encoding.get():
                 self.best_x1_label.config(text=f"x1 = {int(self.best_chromosome[0])}")
@@ -186,7 +194,7 @@ class GAApplication:
         if gen >= 0:
             for idx, chromosome in enumerate(self.current_population):
                 fitness = self.fitness_function(*chromosome)
-                
+
                 if self.integer_encoding.get():
                     fitness = int(fitness)
                     self.history_table.insert(
@@ -200,7 +208,6 @@ class GAApplication:
                         "0",
                         values=(self.total_generations, idx + 1, f"{chromosome[0]:.9f}", f"{chromosome[1]:.9f}", f"{fitness:.9f}")
                     )
-
 
 root = tk.Tk()
 app = GAApplication(root)
