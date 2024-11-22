@@ -6,12 +6,13 @@ import random
 
 class GAApplication:
     def __init__(self, main_window):
-
         self.main_window = main_window
         self.main_window.title("Генетический алгоритм для поиска минимума заданной функции")
+        main_window.geometry("1000x450")
+        
         main_window.grid_columnconfigure(3, weight=1)
         main_window.grid_rowconfigure(12, weight=1)
-        root.geometry("1000x450")
+        
         tk.Label(main_window, text="Оптимизируемая функция: 100*(x2 - x1^2)^2 + (1 - x1)^2"
                  ).grid(row=0, column=0, columnspan=3, sticky="w", padx=10, pady=20)
 
@@ -36,7 +37,6 @@ class GAApplication:
         self._add_checkbox("Использовать модифицированный отбор", self.modified_selection, 7)
         self._add_checkbox("Сохранять историю таблицы (может замедлить программу)", self.save_history, 8)  # Флажок на форме
 
-
         tk.Button(main_window, text="Запустить алгоритм", command=self.genetic_algorithm
                   ).grid(row=9, column=0, columnspan=2, sticky="we", padx=10)
         tk.Button(main_window, text="Очистить", command=self.reset_data
@@ -48,11 +48,21 @@ class GAApplication:
         self.completed_generations.grid(row=11, column=1, sticky="w", pady=10)
 
         self._add_label("Лучшие результаты:", 12)
+        
         self.best_x1_label = self._add_label("x1 = ", 13)
         self.best_x2_label = self._add_label("x2 = ", 14)
 
         self.best_fitness_label = tk.Label(self.main_window, text="Значение функции = ")
         self.best_fitness_label.grid(row=15, column=0, columnspan=2, sticky="w", padx=10, pady=10)
+
+        self.result_x1 = tk.Entry(main_window, width=25)
+        self.result_x1.grid(row=13, column=1, padx=10, pady=5)
+        
+        self.result_x2 = tk.Entry(main_window, width=25)
+        self.result_x2.grid(row=14, column=1, padx=10, pady=5)
+
+        self.result_fitness = tk.Entry(main_window, width=25)
+        self.result_fitness.grid(row=15, column=1, padx=10, pady=5)
 
         # Таблица для вывода поколений
         self.history_table = ttk.Treeview(main_window, columns=("Gen", "ID", "x1", "x2", "Fitness"), show='headings')
@@ -83,7 +93,7 @@ class GAApplication:
 
     @staticmethod
     def fitness_function(x1, x2): 
-        return (100*(x2 - x1**2)**2 + (1 - x1)**2)
+        return (100*(x2 - x1**2)**2 + (1 - x1)**2) 
 
     def generate_population(self, size, min_val, max_val):
         if self.integer_encoding.get():
@@ -116,7 +126,7 @@ class GAApplication:
     def crossover(self, p1, p2, crossover_prob=0.9):
         if random.random() < crossover_prob:
             alpha = np.random.uniform(0, 1, p1.shape) 
-            offspring = p1 * alpha + p2 * (1 - alpha)
+            offspring = p1 * alpha + p2 * (1 - alpha) #Линейное комбинирование
             if self.integer_encoding.get():
                 return np.round(offspring).astype(int)
             return offspring
@@ -183,13 +193,23 @@ class GAApplication:
 
         if self.best_chromosome is not None:
             if self.integer_encoding.get():
-                self.best_x1_label.config(text=f"x1 = {int(self.best_chromosome[0])}")
-                self.best_x2_label.config(text=f"x2 = {int(self.best_chromosome[1])}")
-                self.best_fitness_label.config(text=f"Значение функции = {int(self.best_value)}")
+                self.result_x1.delete(0, tk.END)
+                self.result_x1.insert(0, f"{int(self.best_chromosome[0])}")
+
+                self.result_x2.delete(0, tk.END)
+                self.result_x2.insert(0, f"{int(self.best_chromosome[1])}")
+
+                self.result_fitness.delete(0, tk.END)
+                self.result_fitness.insert(0, f"{int(self.best_value)}")
             else:
-                self.best_x1_label.config(text=f"x1 = {self.best_chromosome[0]:.9f}")
-                self.best_x2_label.config(text=f"x2 = {self.best_chromosome[1]:.9f}")
-                self.best_fitness_label.config(text=f"Значение функции = {self.best_value:.9f}")
+                self.result_x1.delete(0, tk.END)
+                self.result_x1.insert(0, f"{self.best_chromosome[0]:.9f}")
+
+                self.result_x2.delete(0, tk.END)
+                self.result_x2.insert(0, f"{self.best_chromosome[1]:.9f}")
+
+                self.result_fitness.delete(0, tk.END)
+                self.result_fitness.insert(0, f"{self.best_value:.9f}")
 
         if gen >= 0:
             for idx, chromosome in enumerate(self.current_population):
@@ -209,6 +229,8 @@ class GAApplication:
                         values=(self.total_generations, idx + 1, f"{chromosome[0]:.9f}", f"{chromosome[1]:.9f}", f"{fitness:.9f}")
                     )
 
+
 root = tk.Tk()
 app = GAApplication(root)
 root.mainloop()
+
